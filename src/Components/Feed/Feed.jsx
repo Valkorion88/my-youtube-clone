@@ -1,114 +1,89 @@
-import React from 'react';
-import './Feed.css'
-import thumbnail1 from '../../assets/thumbnail1.png'
-import thumbnail2 from '../../assets/thumbnail2.png'
-import thumbnail3 from '../../assets/thumbnail3.png'
-import thumbnail4 from '../../assets/thumbnail4.png'
-import thumbnail5 from '../../assets/thumbnail5.png'
-import thumbnail6 from '../../assets/thumbnail6.png'
-import thumbnail7 from '../../assets/thumbnail7.png'
-import thumbnail8 from '../../assets/thumbnail8.png'
+import React, { useEffect, useState } from 'react';
+import './Feed.css';
 import { Link } from 'react-router-dom';
+import moment from 'moment';
+import { API_KEY } from '../../data';
+import { value_converter } from '../../data';
 
-const Feed = () => {
+const Feed = ({ category }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError('');
+
+      const params = new URLSearchParams({
+        part: 'snippet,contentDetails,statistics',
+        chart: 'mostPopular',
+        maxResults: '50',
+        regionCode: 'US',
+        key: API_KEY,
+      });
+
+      if (category !== 0) {
+        params.set('videoCategoryId', category);
+      }
+
+      try {
+        const response = await fetch(
+          `https://youtube.googleapis.com/youtube/v3/videos?${params}`,
+          { signal: controller.signal }
+        );
+        const result = await response.json();
+
+        if (!response.ok || result.error) {
+          throw new Error(result.error?.message || `YouTube API request failed (${response.status})`);
+        }
+
+        setData(Array.isArray(result.items) ? result.items : []);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          return;
+        }
+
+        console.error('Failed to load videos:', error);
+        setError(error.message || 'An unexpected error occurred.');
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+    return () => controller.abort();
+  }, [category]);
+
   return (
     <div className="feed">
-      <Link to={`video/20/4521`} className="card">
-        <img src={thumbnail1} alt="Thumbnail 1" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </Link>
-      <div className="card">
-        <img src={thumbnail2} alt="Thumbnail 2" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail3} alt="Thumbnail 3" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail4} alt="Thumbnail 4" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail5} alt="Thumbnail 5" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail6} alt="Thumbnail 6" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail7} alt="Thumbnail 7" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail8} alt="Thumbnail 8" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail1} alt="Thumbnail 1" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail2} alt="Thumbnail 2" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail3} alt="Thumbnail 3" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail4} alt="Thumbnail 4" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail5} alt="Thumbnail 5" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail6} alt="Thumbnail 6" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail7} alt="Thumbnail 7" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
-      <div className="card">
-        <img src={thumbnail8} alt="Thumbnail 8" />
-        <h2>Video Title</h2>
-        <h3>Channel Name</h3>
-        <p>15k views &bull; 2 days ago</p>
-      </div>
+      {loading ? (
+        <p className="feed-message">Loading videos...</p>
+      ) : error ? (
+        <p className="feed-message" role="alert">Could not load videos: {error}</p>
+      ) : data.length === 0 ? (
+        <p className="feed-message">No videos found.</p>
+      ) : data.map((item, index) => {
+        const video = item.snippet;
+        const stats = item.statistics || {};
+
+        return (
+          <Link key={item.id || index} to={`/video/${category}/${item.id}`} className="card">
+            <img src={video?.thumbnails?.medium?.url || ''} alt={video?.title || 'Thumbnail'} />
+            <h2>{video?.title || 'Video Title'}</h2>
+            <h3>{video?.channelTitle || 'Channel Name'}</h3>
+            <p>
+              {value_converter(stats.viewCount ?? 0) + ' views'}
+              {' '} &bull; {' '}
+              {video?.publishedAt ? moment(video.publishedAt).fromNow() : 'Recently'}
+            </p>
+          </Link>
+        );
+      })}
     </div>
   );
 };
