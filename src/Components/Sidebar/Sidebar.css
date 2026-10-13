@@ -62,3 +62,9 @@
   padding-bottom: 2px;
   border-bottom: 3px solid #ff0000;
 }
+
+@media (max-width: 900px) {
+  .sidebar{
+    display: none;
+  }
+}

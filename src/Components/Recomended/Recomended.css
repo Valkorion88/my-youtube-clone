@@ -4,17 +4,22 @@
 
 .side-video-list {
   display: flex;
+  min-width: 0;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 8px;
 }
 
 .side-video-list img {
-  flex-basis: 49%;
-  width: 50%;
+  flex: 0 0 48%;
+  width: 48%;
+  object-fit: cover;
 }
 
 .vid-info {
-  flex-basis: 49%;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .vid-info h4 {
@@ -22,3 +27,8 @@
   margin-bottom: 5px;
 }
 
+@media (max-width: 900px) {
+  .recomended {
+    flex-basis: 100%;
+  }
+}
